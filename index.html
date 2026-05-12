@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foundry Bar Drinks Receipt Training</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cutive+Mono&family=Inter:wght@500;600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark: #202020;
+      --panel: #2b2b2b;
+      --paper: #fffdf7;
+      --ink: #111;
+      --accent: #f4c542;
+      --accent-2: #d62828;
+      --muted: #e8e8e8;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #555 0%, #333 42%, #222 100%);
+      color: #fff;
+      font-family: 'Inter', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      min-height: 110px;
+      background: linear-gradient(180deg, #151515 0%, #222 100%);
+      border-bottom: 4px solid var(--accent);
+      z-index: 250;
+      padding: 10px 14px 12px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .controls {
+      background: #111;
+      border: 1px solid #444;
+      border-radius: 14px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .controls label {
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    select, button {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 800;
+      min-height: 42px;
+    }
+
+    select {
+      background: #fff;
+      color: #111;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      color: #111;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 3px 0 #8a6a00;
+    }
+
+    button.secondary {
+      background: #fff;
+      box-shadow: 0 3px 0 #777;
+    }
+
+    button:active { transform: translateY(2px); box-shadow: 0 1px 0 #555; }
+
+    .history-wrap {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 6px;
+    }
+
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #ddd;
+      font-weight: 700;
+    }
+
+    #history {
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+
+    .thumb {
+      width: 84px;
+      height: 124px;
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.45);
+      cursor: pointer;
+      flex: none;
+      font-family: 'Cutive Mono', monospace;
+      font-size: 0.55rem;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+
+    .thumb .label {
+      font-size: 0.66rem;
+      text-align: center;
+      margin-bottom: 4px;
+      font-weight: bold;
+      border-bottom: 1px dashed #111;
+      padding-bottom: 2px;
+    }
+
+    .thumb .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 3px;
+      line-height: 1.1;
+      margin-bottom: 2px;
+    }
+
+    .thumb .item span:first-child {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    main {
+      position: relative;
+      flex: 1;
+      margin-top: 110px;
+      margin-bottom: 54px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .mode-badge {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.72);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      z-index: 90;
+      text-align: center;
+    }
+
+    #receipt {
+      width: min(340px, calc(100vw - 32px));
+      height: min(510px, calc(100vh - 190px));
+      min-height: 430px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 16px;
+      box-shadow: 0 16px 28px rgba(0,0,0,0.55);
+      position: absolute;
+      top: 54px;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: all 0.6s ease;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      z-index: 100;
+      font-family: 'Cutive Mono', monospace;
+      border-radius: 3px;
+    }
+
+    #receipt::before, #receipt::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background-image: radial-gradient(circle at 6px 5px, transparent 6px, var(--paper) 7px);
+      background-size: 12px 10px;
+      pointer-events: none;
+    }
+
+    #receipt::before { top: -9px; }
+    #receipt::after { bottom: -9px; transform: rotate(180deg); }
+
+    #receipt.fly {
+      width: 84px;
+      height: 124px;
+      min-height: 124px;
+      top: -98px;
+      left: 302px;
+      transform: none;
+      padding: 6px;
+      overflow: hidden;
+    }
+
+    #time {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-size: 0.85rem;
+    }
+
+    .receipt-title {
+      text-align: center;
+      margin-top: 26px;
+      font-size: 1.45rem;
+      letter-spacing: 0.02em;
+    }
+
+    .receipt-subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #111;
+    }
+
+    #items {
+      margin-top: 18px;
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      font-size: 0.98rem;
+      line-height: 1.25;
+      align-items: start;
+    }
+
+    .item span:first-child { overflow-wrap: anywhere; }
+
+    #total {
+      border-top: 1px dashed #000;
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.15rem;
+      font-weight: bold;
+    }
+
+    .helper-text {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #f5f5f5;
+      font-size: 0.86rem;
+      text-align: center;
+      opacity: 0.88;
+      width: min(460px, 92vw);
+    }
+
+    #counter {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-size: 1rem;
+      font-weight: 800;
+      z-index: 200;
+      border-top: 1px solid #444;
+    }
+
+    @media (max-width: 720px) {
+      body { overflow: hidden; }
+      .topbar {
+        min-height: 162px;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      main { margin-top: 162px; padding: 12px; }
+      .controls { grid-template-columns: 1fr; }
+      #receipt { top: 48px; height: min(480px, calc(100vh - 230px)); }
+      #receipt.fly { top: -150px; left: 10px; }
+      .mode-badge { top: 8px; font-size: 0.78rem; }
+      .helper-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <section class="controls" aria-label="Receipt controls">
+      <label for="modeSelect">Choose receipt training mode</label>
+      <select id="modeSelect">
+        <option value="spirits">Spirits only</option>
+        <option value="spiritsBeers">Spirits & beers</option>
+        <option value="beersMixerSpirits">Beers, mixers & spirits</option>
+        <option value="winesBeersSpirits">Wines, beers, mixers & spirits</option>
+        <option value="fullMenu">Full drinks menu</option>
+      </select>
+      <div class="button-row">
+        <button id="newTicketBtn" type="button">New ticket</button>
+        <button id="clearBtn" type="button" class="secondary">Clear</button>
+      </div>
+    </section>
+
+    <section class="history-wrap" aria-label="Completed receipt history">
+      <div class="history-title">
+        <span>Completed receipts</span>
+        <span>Tap a small receipt to view it again</span>
+      </div>
+      <div id="history"></div>
+    </section>
+  </header>
+
+  <main>
+    <div id="modeBadge" class="mode-badge">Spirits only</div>
+    <div id="receipt" aria-label="Current receipt" role="button" tabindex="0">
+      <div id="time"></div>
+      <h1 class="receipt-title">Foundry Bar</h1>
+      <div id="receiptSubtitle" class="receipt-subtitle">Spirits only</div>
+      <div id="items"></div>
+      <div id="total"></div>
+    </div>
+    <p class="helper-text">Tap the large receipt when the till task is complete. It will move into the history bar and a new receipt will appear.</p>
+  </main>
+
+  <div id="counter">Orders completed: <span id="count">0</span></div>
+
+  <script>
+    const DATA = {
+      spirits: ['vodka','bourbon','sailor jerry','jack daniels','kraken','jamesons','caol ila','kahlua','gin','straw gin','tequila blanc','tequila gold','havana','makers mark'],
+      beers: ['madri','corona','desperado','smirnoff ice'],
+      wines: ['house white','house red','house rose','zinfandel','malbec','sauvignon blanc','pinot noir','pinot grigio'],
+      fullWines: ['house white','house red','house rose','bottle house white','bottle house red','bottle house rose','zinfandel','malbec','sauvignon blanc','pinot noir','pinot grigio'],
+      mixers: ['vodka+coke','vodka+tonic','rum+coke','brandy+coke','jd+coke','vodka+lemonade','w-w spritzer'],
+      cocktails: ['cuba libre','white russian','negroni','gin & tonic']
+    };
+
+    const MODES = {
+      spirits: {
+        label: 'Spirits only',
+        groups: ['spirits']
+      },
+      spiritsBeers: {
+        label: 'Spirits & beers',
+        groups: ['spirits', 'beers'],
+        weights: { spirits: 7, beers: 3 }
+      },
+      beersMixerSpirits: {
+        label: 'Beers, mixers & spirits',
+        groups: ['spirits', 'beers', 'mixers']
+      },
+      winesBeersSpirits: {
+        label: 'Wines, beers, mixers & spirits',
+        groups: ['spirits', 'beers', 'wines', 'mixers']
+      },
+      fullMenu: {
+        label: 'Full drinks menu',
+        groups: ['spirits', 'beers', 'fullWines', 'cocktails']
+      }
+    };
+
+    const modeSelect = document.getElementById('modeSelect');
+    const modeBadge = document.getElementById('modeBadge');
+    const receiptSubtitle = document.getElementById('receiptSubtitle');
+    const receipt = document.getElementById('receipt');
+    const timeEl = document.getElementById('time');
+    const itemsEl = document.getElementById('items');
+    const totalEl = document.getElementById('total');
+    const counterEl = document.getElementById('count');
+    const historyEl = document.getElementById('history');
+    const newTicketBtn = document.getElementById('newTicketBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let orderCount = 0;
+    let currentItems = [];
+
+    function randomChoice(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function titleCase(text) {
+      return text.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+
+    function randomGroupForMode(mode) {
+      const config = MODES[mode];
+      if (!config.weights) return randomChoice(config.groups);
+      const weighted = [];
+      config.groups.forEach(group => {
+        const count = config.weights[group] || 1;
+        for (let i = 0; i < count; i++) weighted.push(group);
+      });
+      return randomChoice(weighted);
+    }
+
+    function makeSpirit() {
+      const spirit = randomChoice(DATA.spirits);
+      const shot = Math.random() < 0.5 ? 'single' : 'double';
+      const ice = Math.random() < 0.5 ? 'w/ice' : 'no ice';
+      return {
+        name: `${shot} ${spirit} (${ice})`,
+        price: shot === 'single' ? 4.50 : 7.50
+      };
+    }
+
+    function makeBeer() {
+      const beer = randomChoice(DATA.beers);
+      const name = beer.charAt(0).toUpperCase() + beer.slice(1);
+      return { name, price: name.toLowerCase() === 'smirnoff ice' ? 5.00 : 4.00 };
+    }
+
+    function makeWine(useFullWineList) {
+      const wine = randomChoice(useFullWineList ? DATA.fullWines : DATA.wines);
+      const size = randomChoice(['small', 'medium', 'large', 'bottle']);
+      return {
+        name: `${size} ${wine}`,
+        price: size === 'small' ? 5.00 : size === 'medium' ? 7.00 : size === 'large' ? 10.00 : 25.00
+      };
+    }
+
+    function makeMixer() {
+      const mixer = randomChoice(DATA.mixers);
+      const name = mixer.split('+').map(part => titleCase(part)).join(' + ');
+      return { name, price: 6.00 };
+    }
+
+    function makeCocktail() {
+      const cocktail = randomChoice(DATA.cocktails);
+      return { name: titleCase(cocktail), price: randomChoice([8, 9, 10, 11, 12]) };
+    }
+
+    function makeItemForGroup(group) {
+      if (group === 'spirits') return makeSpirit();
+      if (group === 'beers') return makeBeer();
+      if (group === 'wines') return makeWine(false);
+      if (group === 'fullWines') return makeWine(true);
+      if (group === 'mixers') return makeMixer();
+      if (group === 'cocktails') return makeCocktail();
+      return makeSpirit();
+    }
+
+    function renderNewReceipt() {
+      const count = Math.floor(Math.random() * 4) + 1;
+      const mode = modeSelect.value;
+      return Array.from({ length: count }, () => makeItemForGroup(randomGroupForMode(mode)));
+    }
+
+    function formatMoney(value) {
+      return `£${value.toFixed(2)}`;
+    }
+
+    function displayReceipt(items, labelOverride) {
+      currentItems = items.map(item => ({ ...item }));
+      const now = new Date();
+      const label = labelOverride || MODES[modeSelect.value].label;
+      timeEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      receiptSubtitle.textContent = label;
+      modeBadge.textContent = label;
+      itemsEl.innerHTML = '';
+      let sum = 0;
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'item';
+        const name = document.createElement('span');
+        const price = document.createElement('span');
+        name.textContent = item.name;
+        price.textContent = formatMoney(item.price);
+        row.appendChild(name);
+        row.appendChild(price);
+        itemsEl.appendChild(row);
+        sum += item.price;
+      });
+      totalEl.innerHTML = `<span>Total</span><span>${formatMoney(sum)}</span>`;
+    }
+
+    function makeThumbnail(items, label) {
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      thumb.dataset.label = label;
+      thumb._items = items.map(item => ({ ...item }));
+
+      const lab = document.createElement('div');
+      lab.className = 'label';
+      lab.textContent = 'Foundry';
+      thumb.appendChild(lab);
+
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'item';
+        const name = document.createElement('span');
+        const price = document.createElement('span');
+        name.textContent = item.name;
+        price.textContent = formatMoney(item.price);
+        row.appendChild(name);
+        row.appendChild(price);
+        thumb.appendChild(row);
+      });
+
+      thumb.addEventListener('click', () => {
+        receipt.classList.remove('fly');
+        displayReceipt(thumb._items, thumb.dataset.label);
+      });
+
+      historyEl.appendChild(thumb);
+    }
+
+    function completeCurrentReceipt() {
+      const label = MODES[modeSelect.value].label;
+      const archived = currentItems.map(item => ({ ...item }));
+      receipt.classList.add('fly');
+      setTimeout(() => {
+        makeThumbnail(archived, label);
+        receipt.classList.remove('fly');
+        displayReceipt(renderNewReceipt());
+      }, 600);
+      orderCount++;
+      counterEl.textContent = orderCount;
+    }
+
+    function resetAll() {
+      orderCount = 0;
+      counterEl.textContent = orderCount;
+      historyEl.innerHTML = '';
+      receipt.classList.remove('fly');
+      displayReceipt(renderNewReceipt());
+    }
+
+    receipt.addEventListener('click', completeCurrentReceipt);
+    receipt.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        completeCurrentReceipt();
+      }
+    });
+
+    modeSelect.addEventListener('change', () => {
+      historyEl.innerHTML = '';
+      orderCount = 0;
+      counterEl.textContent = orderCount;
+      displayReceipt(renderNewReceipt());
+    });
+
+    newTicketBtn.addEventListener('click', () => displayReceipt(renderNewReceipt()));
+    clearBtn.addEventListener('click', resetAll);
+
+    displayReceipt(renderNewReceipt());
+  </script>
+</body>
+</html>
